@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+div.container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 288px;
+    width: 480px;
+    background-color: #002742;
+}
+
+div.score-zone {
+    width: 480px;
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 4px;
+}
+
+.team-ctn {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    width: 30%;
+}
+
+.team-name {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.team-score {
+    text-align: center;
+    font-weight: bold;
+    font-size: 72px;
+}
+
+.time {
+    width: 40%;
+    padding-left: 24px;
+    flex-grow: 2;
+    font-size: 56px;
+    font-weight: bold;
+    font-stretch: ultra-condensed;
+    color: white;
+}
+
+img.coa {
+    margin-left: auto;
+    margin-right: auto;
+}
