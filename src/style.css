@@ -11,6 +11,15 @@ div.container {
     background-color: #002742;
 }
 
+div.signage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 288px;
+    width: 480px;
+    background-color: #002742;
+}
+
 div.score-zone {
     width: 480px;
     display: flex;
@@ -51,4 +60,63 @@ div.score-zone {
 img.coa {
     margin-left: auto;
     margin-right: auto;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 288px;
+    width: 480px;
+}
+
+.slide-next {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 288px;
+    width: 480px;
+    visibility: hidden;
+}
+
+.vc {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    height: 288px;
+    width: 480px;
+}
+
+.hc {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.hour {
+    width: 100px;
+    font-size: 32px;
+    font-weight: bold;
+    font-stretch: ultra-condensed;
+    color: white;
+}
+
+.team {
+    width: 320px;
+    font-size: 24px;
+    font-stretch: ultra-condensed;
+    color: white;
+}
+
+.field {
+    width: 60px;
+    font-size: 32px;
+    font-weight: bold;
+    font-stretch: ultra-condensed;
+    color: white;
 }
