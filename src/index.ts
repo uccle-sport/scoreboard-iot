@@ -25,6 +25,16 @@ interface Team {
     logo: string,
     score: number,
 }
+
+interface Match {
+    id: number,
+    time: string,
+    start_at: number,
+    location: string,
+    locationColor: string,
+    match: { catShortName: string, aTeam: Team, bTeam: Team }
+}
+
 export class ScoreBoard {
     params: URLSearchParams = new URLSearchParams(window.location.href.split("?")[1])
     socket: Socket = io({query: {token: this.params?.get('secret') ?? "", uuid: this.params?.get('uuid') ?? ""}});
@@ -39,7 +49,11 @@ export class ScoreBoard {
     tournament: boolean = true
     slides: string[] = []
     currentSlide = 0
-    matches: {id: number, time: string, location:string, locationColor:string, match: {aTeam: Team, bTeam: Team}}[] = []
+    matches: Match[] = []
+    pool1: Element | null = null;
+    pool2: Element | null = null;
+    tournamentScreen: number = 0;
+    tournamentSubScreen: number = 0;
 
     init() {
         setInterval(() => {
@@ -55,8 +69,16 @@ export class ScoreBoard {
         }, 15000)
 
         setInterval(() => {
-            this.tournament && this.updateResults()
-        }, 15000)
+            if (this.tournament && this.tournamentScreen == 0) {
+                if (this.tournamentSubScreen === 0) {
+                    this.updateSchedules()
+                } else {
+                    this.updateSchedulesDom()
+                    this.rotateTournamentScreen()
+                }
+            }
+            if (this.tournament && this.tournamentScreen > 0) { this.updateResults() }
+        }, 10000)
 
         this.socket.on('update', (msg: Message) => {
             this.updateState(msg);
@@ -67,7 +89,7 @@ export class ScoreBoard {
         this.syncState();
     }
 
-    private updateResults() {
+    private updateSchedules() {
         const http = new XMLHttpRequest();
         const url = 'https://www.mitivu.com/data/data';
         const params = `mod%5B330%5D%5Btimestamp%5D=${+new Date()}&assets=false&lang=fr-BE&dispId=129`
@@ -78,13 +100,74 @@ export class ScoreBoard {
         http.onreadystatechange = () => {
             if (http.readyState === 4 && http.status === 200) {
                 const data = JSON.parse(http.responseText)
-                this.matches = data.data["330"].data.data[0].matches.slice(0,6)
-                this.updateResultsDom()
+                const allMatches = data.data["330"].data.data[0].matches;
+                this.matches = allMatches.filter((m: Match) => m.start_at < allMatches[0].start_at + 61 * 60)
+                this.updateSchedulesDom()
+                this.rotateTournamentScreen()
+            } else if (http.readyState === 4) {
+                this.rotateTournamentScreen()
             }
         };
 
         http.send(params);
     }
+
+    private rotateTournamentScreen(target?: number) {
+        document.getElementById('schedules')!.style.visibility = this.tournamentScreen == 0 ? 'visible' : 'hidden'
+        document.getElementById('pool1')!.style.visibility = this.tournamentScreen == 1 ? 'visible' : 'hidden'
+        document.getElementById('pool2')!.style.visibility = this.tournamentScreen == 2 ? 'visible' : 'hidden'
+
+        if (target === undefined && this.tournamentScreen == 0) {
+            this.tournamentSubScreen++
+            if (this.tournamentSubScreen * 6 >= this.matches.length) {
+                this.tournamentSubScreen = 0
+                this.tournamentScreen = (this.tournamentScreen + 1) % 3
+            }
+        } else {
+            this.tournamentScreen = target !== undefined ? target : (this.tournamentScreen + 1) % 3
+        }
+    }
+
+    private updateResults() {
+        const http = new XMLHttpRequest();
+        const url = 'https://www.mitivu.com/data/data';
+        const start = new Date()
+        start.setHours(0,0,0,0)
+        const params = `mod%5B328%5D%5Btimestamp%5D=${(+start)/1000}&assets=false&lang=fr-BE&dispId=129`
+
+        http.open('POST', url, true);
+        http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        http.setRequestHeader('x-requested-with', 'XMLHttpRequest');
+        http.onreadystatechange = () => {
+            if (http.readyState === 4 && http.status === 200) {
+                const data = JSON.parse(http.responseText)
+
+                const content = data.data["328"].medias["10406"]?.contents
+                if (content) {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(content, "text/html");
+                    this.pool1 = doc.querySelector('[data-idx="0-2"]') ?? doc.querySelectorAll('table')[0]
+                    this.pool2 = doc.querySelector('[data-idx="1-2"]') ?? doc.querySelectorAll('table')[1]
+
+                    document.getElementById('pool1')!.innerHTML = ''
+                    this.pool1 && document.getElementById('pool1')!.appendChild(this.pool1)
+                    document.getElementById('pool2')!.innerHTML = ''
+                    this.pool2 && document.getElementById('pool2')!.appendChild(this.pool2)
+                    this.rotateTournamentScreen()
+                } else {
+                    document.getElementById('pool1')!.innerHTML = ''
+                    document.getElementById('pool2')!.innerHTML = ''
+                    this.rotateTournamentScreen(0)
+                }
+                this.rotateTournamentScreen(0)
+            } else if (http.readyState === 4) {
+                this.rotateTournamentScreen()
+            }
+        };
+
+        http.send(params);
+    }
+
 
     private switchSlideUsingDoubleBuffer() {
         const root = document.getElementById("signage");
@@ -183,14 +266,20 @@ export class ScoreBoard {
         time && (time.innerHTML = formatTime(Math.max(this.remaining, 120), this.paused))
     }
 
-    private updateResultsDom() {
+    private updateSchedulesDom() {
+        const normalize = (s?:string) =>
+            s?.replace(/ ?boys/ig, 'B')?.replace(/ ?girls/ig, 'G')?.replace(/ ?- ?/ig, '.')?.substring(0,12)
         for (let i=1;i<=6;i++) {
-            const time = document.getElementById(`time${i}`);
-            const team = document.getElementById(`team${i}`);
-            const field = document.getElementById(`field${i}`);
-            time && (time.innerText = this.matches[i-1]?.time)
-            team && (team.innerText = (this.matches[i-1]?.match?.aTeam?.name ?? '') + '-' + (this.matches[i-1]?.match?.bTeam?.name ?? ''))
-            field && (field.innerText = this.matches[i-1].location)
+            const time = document.getElementById(`time${i}`)
+            const team = document.getElementById(`team${i}`)
+            const field = document.getElementById(`field${i}`)
+            const match = this.matches[this.tournamentSubScreen * 6 + i-1]
+            time && (time.innerText = match?.time ?? '')
+            const cat = match?.match?.catShortName;
+            const aTeam = normalize(match?.match?.aTeam?.name)
+            const bTeam = normalize(match?.match?.bTeam?.name)
+            team && (team.innerText = (cat ? `${cat} `: '') + (aTeam ?? '') + '-' + (bTeam ?? ''))
+            field && (field.innerText = match?.location ?? '')
         }
     }
 }

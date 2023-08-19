@@ -107,16 +107,77 @@ img.coa {
 }
 
 .team {
-    width: 320px;
-    font-size: 24px;
+    width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 26px;
+    font-weight: bold;
     font-stretch: ultra-condensed;
-    color: white;
+    color: #fffa93;
 }
 
 .field {
-    width: 60px;
+    width: 80px;
     font-size: 32px;
     font-weight: bold;
     font-stretch: ultra-condensed;
     color: white;
+}
+
+div#pool1 {
+    visibility: visible;
+    color: white;
+    font-weight: bold;
+    font-stretch: ultra-condensed;
+    font-size: 28px;
+}
+
+div#pool1 {
+    visibility: visible;
+    color: white;
+    font-weight: bold;
+    font-stretch: ultra-condensed;
+    font-size: 28px;
+}
+
+div#pool2 {
+    visibility: visible;
+    color: white;
+    font-weight: bold;
+    font-stretch: ultra-condensed;
+    font-size: 28px;
+}
+
+div#pool1 td {
+    white-space: nowrap;
+}
+
+div#pool2 td {
+    white-space: nowrap;
+}
+
+td.sport-pool-team-logo {
+    visibility: hidden;
+}
+
+td.sport-ml-logo {
+    visibility: hidden;
+}
+
+
+td.sport-pool-team-col {
+    padding-left: 12px;
+    color: #fffa93;
+}
+
+td.sport-pool-num {
+    padding-left: 24px;
+}
+
+.sport-ml-name td {
+    font-size: 18px;
+}
+
+tr[data-index] {
+    font-size: 18px;
 }
