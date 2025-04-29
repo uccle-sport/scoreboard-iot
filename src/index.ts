@@ -8,6 +8,10 @@ function formatTime(time: number, paused: boolean) {
     return fdg(Math.floor(time / 60)) + (paused && ((+new Date()) / 1000) % 2 === 0 ? "<span style=\"visibility: hidden;\">:</span>" : "<span>:</span>") + fdg(time % 60);
 }
 
+interface Relay {
+    relays: number[]
+}
+
 interface Message {
     home: number
     away: number
@@ -41,9 +45,35 @@ export class ScoreBoard {
             this.updateState(msg);
         });
 
+        this.socket.on('relay', (msg: Relay) => {
+            this.updateRelays(msg);
+        });
+
+
         const root = document.getElementById("root");
         root && (root.style.display = "block")
         this.syncState();
+    }
+
+    private updateRelays(msg: Relay) {
+        //Post to localhost with the new state encoded in form data using fetch api
+        fetch("http://127.0.0.1:8000/Relay", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                Relay1: (msg.relays[0] ?? 1).toString(),
+                Relay2: (msg.relays[1] ?? 1).toString(),
+                Relay3: (msg.relays[2] ?? 1).toString(),
+            }),
+        }).then((response) => {
+            if (response.ok) {
+                console.log("Relays updated successfully");
+            } else {
+                console.error("Failed to update relays");
+            }
+        });
     }
 
     private syncState() {
@@ -90,7 +120,7 @@ export class ScoreBoard {
         awayName && (awayName.innerText = this.awayTeam)
         homeScore && (homeScore.innerText = this.home.toString())
         awayScore && (awayScore.innerText = this.away.toString())
-        time && (time.innerHTML = formatTime(Math.max(this.remaining, 120), this.paused))
+        time && (time.innerHTML = formatTime(Math.max(this.remaining, 60), this.paused))
     }
 }
 
