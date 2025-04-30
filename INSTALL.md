@@ -1,17 +1,17 @@
 
 ## How to install the Raspberry Pi OS Lite (64-bit) with Wayfire and Chromium
 
-Start with a fresh install of Raspberry Pi OS Lite (64-bit) and run the following commands
+Start with a fresh installation of Raspberry Pi OS Lite (64-bit) and run the following commands
 
 
 ```bash
 # As rus user
 sudo apt update && sudo apt -y full-upgrade
+# experimental wayland support without Xwayland
+# sudo apt install wayfire seatd xdg-user-dirs chromium-browser
 sudo apt install wayfire seatd xdg-user-dirs xwayland chromium-browser
+
 mkdir -p ~/.config
-touch ~/.config/wayfire.ini
-raspi-config #Setup wayland and autologin in console
-reboot
 
 cat > .config/wayfire.ini <<EOF
 [core]
@@ -31,7 +31,10 @@ EOF
 cat > kiosk.sh <<EOF
 #!/bin/bash
 export DISPLAY=:0
-/usr/bin/chromium-browser --ozone-platform=wayland --window-position=0,0 --enable-pinch --fast --fast-start --kiosk --noerrdialogs --disable-translate --no-first-run --disable-pinch --overscroll-history-navigation=disabled --disable-features=TouchpadOverscrollHistoryNavigation --disable-restore-session-state --disable-infobars --kiosk --enable-crashpad --start-fullscreen --start-maximized 'https://flowr-score.herokuapp.com/index.html?secret=M9eLGvEnjES889ML&uuid=d15b7257-f58f-4d70-a786-e6a530ff7ed7'
+
+# experimental wayland support without Xwayland
+#/usr/bin/chromium-browser --enable-features=UseOzonePlatform --ozone-platform=wayland --window-position=0,0 --enable-pinch --fast --fast-start --kiosk --noerrdialogs --disable-translate --no-first-run --disable-pinch --overscroll-history-navigation=disabled --disable-features=TouchpadOverscrollHistoryNavigation --disable-restore-session-state --disable-infobars --kiosk --enable-crashpad --start-fullscreen --start-maximized 'https://flowr-score.herokuapp.com/index.html?secret=M9eLGvEnjES889ML&uuid=d15b7257-f58f-4d70-a786-e6a530ff7ed7'
+/usr/bin/chromium-browser --window-position=0,0 --enable-pinch --fast --fast-start --kiosk --noerrdialogs --disable-translate --no-first-run --disable-pinch --overscroll-history-navigation=disabled --disable-features=TouchpadOverscrollHistoryNavigation --disable-restore-session-state --disable-infobars --kiosk --enable-crashpad --start-fullscreen --start-maximized 'https://flowr-score.herokuapp.com/index.html?secret=M9eLGvEnjES889ML&uuid=d15b7257-f58f-4d70-a786-e6a530ff7ed7'
 EOF
 
 mkdir wayfire-plugins
@@ -50,6 +53,10 @@ LC_ALL=en_US.UTF-8
 EOF
 
 echo '[[ -z "${SSH_CONNECTION}" ]] && wayfire' >> ~/.bashrc
+
+raspi-config #Setup wayland and autologin in console
+
+reboot
 
 # The following part is optional, but it is needed to control the relay board
 apt install python3-setuptools
